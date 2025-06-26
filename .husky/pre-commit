@@ -1,0 +1,2 @@
+eslint "{src,test}/**/*.ts"
+tsc --noEmit

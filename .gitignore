@@ -1,0 +1,16 @@
+# deps
+node_modules/
+src/generated
+
+.vscode
+.idea
+.DS_Store
+.env
+.sh
+.zip
+.doc*
+.xls*
+package-lock.json
+yarn*
+pnpm*
+npm*

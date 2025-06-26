@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --- Enums ---
+
+enum RobotStatus {
+  ACTIVE
+  INACTIVE
+  BANNED
+}
+
+enum ChatType {
+  PRIVATE
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VOICE
+  VIDEO
+  FILE
+  SYSTEM
+  UNKNOWN
+}
+
+// --- Models ---
+
+/// 机器人账号模型 (ID 保持 BigInt)
+model Robot {
+  id        BigInt      @id @default(autoincrement())
+  username  String      @unique
+  password  String
+  wxid      String?     @unique
+  nickname  String?
+  avatar    String?
+  status    RobotStatus @default(ACTIVE)
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @default(now()) @updatedAt @map("updated_at")
+  isDeleted Boolean     @default(false) @map("is_deleted")
+
+  referredCustomers Customer[]   @relation("ReferredByRobot")
+  sentMessages      ChatRecord[] @relation("SentByRobot")
+
+  @@map("robots")
+}
+
+/// 客户等级模型 (ID 保持 Int)
+model CustomerLevel {
+  id          Int     @id @default(autoincrement())
+  levelName   String  @unique @map("level_name")
+  sortOrder   Int     @default(0) @map("sort_order")
+  description String?
+
+  customers Customer[]
+
+  @@map("customer_levels")
+}
+
+/// 客户信息模型 (ID 已修改为 UUID)
+model Customer {
+  /// 主键已修改为 UUID 字符串
+  id               String   @id @default(uuid())
+  wxid             String   @unique
+  nickname         String?
+  phoneNumber      String?  @unique @map("phone_number")
+  registrationDate DateTime @default(now()) @map("registration_date")
+
+  level     CustomerLevel @relation(fields: [levelId], references: [id])
+  levelId   Int           @map("level_id")
+  isDeleted Boolean       @default(false) @map("is_deleted")
+
+  referrer        Robot?  @relation("ReferredByRobot", fields: [referrerRobotId], references: [id])
+  referrerRobotId BigInt? @map("referrer_robot_id")
+
+  sentMessages ChatRecord[] @relation("SentByCustomer")
+
+  @@map("customers")
+}
+
+/// 聊天记录模型 (ID 已修改为 UUID)
+model ChatRecord {
+  /// 主键已修改为 UUID 字符串
+  id String @id @default(uuid())
+
+  chatId    String      @map("chat_id")
+  chatType  ChatType    @map("chat_type")
+  type      MessageType @default(TEXT)
+  content   String      @db.Text
+  timestamp DateTime    @default(now())
+
+  senderRobot   Robot?  @relation("SentByRobot", fields: [senderRobotId], references: [id])
+  senderRobotId BigInt? @map("sender_robot_id")
+
+  /// 外键 senderCustomerId 的类型已从 BigInt? 修改为 String?
+  senderCustomer   Customer? @relation("SentByCustomer", fields: [senderCustomerId], references: [id])
+  senderCustomerId String?   @map("sender_customer_id")
+
+  @@index([chatId])
+  @@index([timestamp])
+  @@map("chat_records")
+}

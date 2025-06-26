@@ -1,0 +1,25 @@
+### 登录
+POST http://localhost:{{port}}/api/v1/login
+Content-Type: application/json
+
+{
+  "username": "123456",
+  "password": "123456"
+}
+
+
+### 注册机器人
+POST http://localhost:{{port}}/api/v1/robots/register
+Content-Type: application/json
+
+{
+  "username": "123456",
+  "password": "123456",
+  "nickname": "贝儿妈",
+  "wxid": "wxid_3gk72kiii2u322",
+  "avatar": "https://pic1.imgdb.cn/item/685a24dc58cb8da5c869f368.jpg"
+}
+
+
+### 获取所有机器人
+GET http://localhost:{{port}}/api/v1/getAllRobots
